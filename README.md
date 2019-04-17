@@ -42,7 +42,7 @@ var virtualbox = require('virtualbox');
 
 The general formula for commands is:
 
-> virtualbox. **API command** ( "**registered vm name**", **[parameters]**, **callback** );
+> virtualbox. **API command** ( "**registered vm name**", **[parameters]**).then(**[stdout]** => {}).catch(error => {});
 
 Available API commands are listed at the end of this document.
 
@@ -55,18 +55,20 @@ Available API commands are listed at the end of this document.
 Virtual machines will _start headless by default_, but you can pass a boolean parameter to start them with a GUI:
 
 ```javascript
-virtualbox.start("machine_name", true, function start_callback(error) {
-  if (error) throw error;
-  console.log("Virtual Machine has started WITH A GUI!");
+virtualbox.start("machine_name", true).then(stdout => {
+    console.log("Virtual Machine has started WITH A GUI!");
+}).catch(error => {
+  throw error;
 });
 ```
 
 So as not to break pre-0.1.0 implementations, the old method still works (which also defaults to headless):
 
 ```javascript
-virtualbox.start("machine_name", function start_callback(error) {
+virtualbox.start("machine_name").then( stdout => {
+    console.log("Virtual Machine has started HEADLESS!");
+}).catch (error => {
   if (error) throw error;
-  console.log("Virtual Machine has started HEADLESS!");
 });
 ```
 
@@ -75,25 +77,28 @@ virtualbox.start("machine_name", function start_callback(error) {
 **Note:** For historical reasons, `.stop` is an alias to `.savestate`.
 
 ```javascript
-virtualbox.stop("machine_name", function stop_callback(error) {
+virtualbox.stop("machine_name").then( () => {
+    console.log("Virtual Machine has been saved");
+}).catch(error => {
   if (error) throw error;
-  console.log("Virtual Machine has been saved");
 });
 ```
 
 To halt a machine completely, you can use `poweroff` or `acpipowerbutton`:
 
 ```javascript
-virtualbox.poweroff("machine_name", function poweroff_callback(error) {
-  if (error) throw error;
+virtualbox.poweroff("machine_name").then( ()=> {
   console.log("Virtual Machine has been powered off!");
+}).catch( error => {
+ throw error;
 });
 ```
 
 ```javascript
-virtualbox.acpipowerbutton("machine_name", function acpipower_callback(error) {
-  if (error) throw error;
+virtualbox.acpipowerbutton("machine_name", () => {
   console.log("Virtual Machine's ACPI power button was pressed.");
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -102,43 +107,48 @@ virtualbox.acpipowerbutton("machine_name", function acpipower_callback(error) {
 Noting the caveat above that `.stop` is actually an alias to `.savestate`...
 
 ```javascript
-virtualbox.pause("machine_name", function pause_callback(error) {
-  if (error) throw error;
+virtualbox.pause("machine_name").then( ()=> {
   console.log("Virtual Machine is now paused!");
-});
+}).catch(error => {
+  throw error;
+};
 ```
 
 ```javascript
-virtualbox.savestate("machine_name", function save_callback(error) {
-  if (error) throw error;
+virtualbox.savestate("machine_name").then( () => {
   console.log("Virtual Machine is now paused!");
+}).catch(error => {
+  throw error;
 });
 ```
 
 And, in the same family, `acpisleepbutton`:
 
 ```javascript
-virtualbox.acpisleepbutton("machine_name", function acpisleep_callback(error) {
-  if (error) throw error;
+virtualbox.acpisleepbutton("machine_name").then ( () => {
   console.log("Virtual Machine's ACPI sleep button signal was sent.");
+}).catch(error => {
+  throw error;
 });
 ```
 
 Note that you should probably _resume_ a machine which is in one of the above three states.
 
 ```javascript
-virtualbox.resume("machine_name", function resume_callback(error) {
-  if (error) throw error;
+virtualbox.resume("machine_name").then( () => {
   console.log("Virtual Machine is now paused!");
+}).catch( error => {
+  throw error;
 });
 ```
 
 And, of course, a reset button method:
 
 ```javascript
-virtualbox.reset("machine_name", function reset_callback(error) {
-  if (error) throw error;
+virtualbox.reset("machine_name").then (() => {
   console.log("Virtual Machine's reset button was pressed!");
+}).catch ( error => {
+  throw error;
 });
 ```
 
@@ -148,9 +158,10 @@ virtualbox.reset("machine_name", function reset_callback(error) {
 You can export with `export` method:
 
 ```javascript
-virtualbox.export("machine_name", "output", function export_callback(error) {
-  if(error) throw error;
+virtualbox.export("machine_name", "output").then ( () => 
   console.log("Virtual Machine was exported!");
+}).then ( error => {
+  throw error;
 });
 ```
 
@@ -159,39 +170,43 @@ virtualbox.export("machine_name", "output", function export_callback(error) {
 You can show snapshot list with `snapshotList` method:
 
 ```javascript
-virtualbox.snapshotList("machine_name", function(error, snapshotList, currentSnapshotUUID) {
-  if(error) throw error;
+virtualbox.snapshotList("machine_name").then ( (snapshotList,currentSnapshotUUID)) {
   if(snapshotList) {
     console.log(JSON.stringify(snapshotList), JSON.stringify(currentSnapshotUUID));
   }
+}).catch(error => {
+  throw error;
 });
 ```
 
 And, you can take a snapshot:
 
 ```javascript
-virtualbox.snapshotTake("machine_name", "snapshot_name", function(error, uuid) {
-  if (error) throw error;
+virtualbox.snapshotTake("machine_name", "snapshot_name".then( uuid => {
 	console.log('Snapshot has been taken!');
 	console.log('UUID: ', uuid);
+}).catch( error => {
+  throw error;
 });
 ```
 
 Or, delete a snapshot:
 
 ```javascript
-virtualbox.snapshotDelete("machine_name", "snapshot_name", function(error) {
-  if (error) throw error;
+virtualbox.snapshotDelete("machine_name", "snapshot_name").then (() =>{
 	console.log('Snapshot has been deleted!');
+}).catch( error => {
+  throw error;
 });
 ```
 
 Or, restore a snapshot:
 
 ```javascript
-virtualbox.snapshotRestore("machine_name", "snapshot_name", function(error) {
-  if (error) throw error;
+virtualbox.snapshotRestore("machine_name", "snapshot_name").then ( () =>{
 	console.log('Snapshot has been restored!');
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -218,9 +233,10 @@ var options = {
   params: "https://google.com"
 }
 
-virtualbox.exec(options, function exec_callback(error, stdout) {
-    if (error) throw error;
+virtualbox.exec(options).then(stdout => {
     console.log('Started Internet Explorer...');
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -240,15 +256,16 @@ var options = {
 
 ## Killing programs in the guest
 
-Tasks can be killed in the guest as well. In Windows guests this calls `taskkill.exe /im` and on Linux, BSD and OS X (Darwin) guests, it calls `sudo killall`:
+Tasks can be killed in the guest as well. In Windows guests this calls `taskkill.exe /im` and on Linux, BSD and OS X (Darwin) guests, it calls `killall` with the user own permissions:
 
 ```javascript
 virtualbox.kill({
     vm: "machine_name",
     cmd: "iexplore.exe"
-}, function kill_callback(error) {
-    if (error) throw error;
+}.then( () => {
     console.log('Terminated Internet Explorer.');
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -265,9 +282,10 @@ var sequence = [
   { key: 'A',     type: 'break', code: SCAN_CODES.getBreakCode('A')}
 ];
 
-virtualbox.keyboardputscancode("machine_name", sequence, function keyscan_callback(err) {
-    if (error) throw error;
+virtualbox.keyboardputscancode("machine_name", sequence).then( () => {
     console.log('Sent SHIFT A');
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -276,9 +294,10 @@ virtualbox.keyboardputscancode("machine_name", sequence, function keyscan_callba
 List all registered machines, returns an array:
 
 ```javascript
-virtualbox.list(function list_callback(machines, error) {
-  if (error) throw error;
+virtualbox.list.then(machines => {
   // Act on machines
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -290,9 +309,10 @@ var options = {
   key: "/VirtualBox/GuestInfo/Net/0/V4/IP"
 }
 
-virtualbox.guestproperty(function guestproperty_callback(machines, error) {
-  if (error) throw error;
+virtualbox.guestproperty.get(options).then(machines  => {
   // Act on machines
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -304,9 +324,10 @@ var options = {
   key: "GUI/Fullscreen"
 }
 
-virtualbox.extradata.get(options, function extradataget_callback(error, value) {
-  if (error) throw error;
+virtualbox.extradata.get(options).then(value => {
   console.log('Virtual Machine "%s" extra "%s" value is "%s"', options.vm, options.key, value);
+}).catch(error => {
+  throw error;
 });
 ```
 
@@ -319,9 +340,10 @@ var options = {
   value: "true"
 }
 
-virtualbox.extradata.set(options, function extradataset_callback(error) {
-  if (error) throw error;
+virtualbox.extradata.set(options).then ( () => {
   console.log('Set Virtual Machine "%s" extra "%s" value to "%s"', options.vm, options.key, options.value);
+}).catch(error =>{ 
+  throw error;
 });
 ```
 
@@ -330,58 +352,54 @@ virtualbox.extradata.set(options, function extradataset_callback(error) {
 ```javascript
 var virtualbox = require('virtualbox');
 
-virtualbox.start("machine_name", function start_callback(error) {
-
-    if (error) throw error;
-
+virtualbox.start("machine_name").then( () => {
     console.log('VM "w7" has been successfully started');
-
     virtualbox.exec({
         vm: "machine_name",
         cmd: "C:\\Program Files\\Internet Explorer\\iexplore.exe",
         params: "http://google.com"
-    }, function (error) {
-
-        if (error) throw error;
+    }.then ( () =>{
         console.log('Running Internet Explorer...');
-
+    }).catch(error => {
+      throw error
     });
 
-});
+}).catch(error => {
+  throw error;
+};
 ```
 
 # Available Methods
 
 `virtualbox`
 
-- `.pause({vm:"machine_name"}, callback)`
-- `.reset({vm:"machine_name"}, callback)`
-- `.resume({vm:"machine_name"}, callback)`
-- `.start({vm:"machine_name"}, callback)` and `.start({vm:"machine_name"}, true, callback)`
-- `.stop({vm:"machine_name"}, callback)`
-- `.savestate({vm:"machine_name"}, callback)`
-- `.export({vm:"machine_name"}, {output: "output"}, callback)`
-- `.poweroff({vm:"machine_name"}, callback)`
-- `.acpisleepbutton({vm:"machine_name"}, callback)`
-- `.acpipowerbutton({vm:"machine_name"}, callback)`
-- `.guestproperty({vm:"machine_name", property: "propname"}, callback)`
-- `.exec(){vm: "machine_name", cmd: "C:\\Program Files\\Internet Explorer\\iexplore.exe", params: "http://google.com"}, callback)`
-- `.exec(){vm: "machine_name", user:"Administrator", password: "123456", cmd: "C:\\Program Files\\Internet Explorer\\iexplore.exe", params: "http://google.com"}, callback)`
-- `.keyboardputscancode("machine_name", [scan_codes], callback)`
-- `.kill({vm:"machine_name"}, callback)`
-- `.list(callback)`
-- `.isRunning({vm:"machine_name"}, callback)`
-- `.snapshotList({vm:"machine_name"}, callback)`
-- `.snapshotTake({vm:"machine_name"}, {vm:"snapshot_name"},  callback)`
-- `.snapshotDelete({vm:"machine_name"}, {vm:"snapshot_UUID"}, callback)`
-- `.snapshotRestore({vm:"machine_name"}, {vm:"snapshot_UUID"}, callback)`
-- `.extradata.get({vm:"machine_name", key:"keyname"}, callback)`
-- `.extradata.set({vm:"machine_name", key:"keyname", value:"val"}, callback)`
+- `.pause({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.reset({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.resume({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.start({vm:"machine_name"}).then(() => {}).catch(error =>{}` and `.start({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.stop({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.savestate({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.export({vm:"machine_name"}, {output: "output"}).then(() => {}).catch(error =>{}`
+- `.poweroff({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.acpisleepbutton({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.acpipowerbutton({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.guestproperty.get({vm:"machine_name", property: "propname"}).then((result) => {}).catch(error =>{}`
+- `.exec(){vm: "machine_name", cmd: "C:\\Program Files\\Internet Explorer\\iexplore.exe", params: "http://google.com"}).then((result) => {}).catch(error =>{}`
+- `.exec(){vm: "machine_name", user:"Administrator", password: "123456", cmd: "C:\\Program Files\\Internet Explorer\\iexplore.exe", params: "http://google.com"}).then((result) => {}).catch(error =>{}`
+- `.keyboardputscancode("machine_name", [scan_codes]).then(() => {}).catch(error =>{}`
+- `.kill({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.list().then((result) => {}).catch(error =>{}`
+- `.isRunning({vm:"machine_name"}).then(() => {}).catch(error =>{}`
+- `.snapshotList({vm:"machine_name"}).then((result) => {}).catch(error =>{}`
+- `.snapshotTake({vm:"machine_name"}, {vm:"snapshot_name"}).then(() => {}).catch(error =>{}`
+- `.snapshotDelete({vm:"machine_name"}, {vm:"snapshot_UUID"}).then(() => {}).catch(error =>{}`
+- `.snapshotRestore({vm:"machine_name"}, {vm:"snapshot_UUID"}).then(() => {}).catch(error =>{}`
+- `.extradata.get({vm:"machine_name", key:"keyname"}).then(() => {}).catch(error =>{}`
+- `.extradata.set({vm:"machine_name", key:"keyname", value:"val"}).then(() => {}).catch(error =>{}`
 
 # Troubleshooting
 
 - Make sure that Guest account is enabled on the VM.
-- Make sure your linux guest can `sudo` with `NOPASSWD` (at least for now).
 - VMs start headlessly by default: if you're having trouble with executing a command, start the VM with GUI and observe the screen after executing same command.
 - To avoid having "Concurrent guest process limit is reached" error message, execute your commands as an administrator.
 - Don't forget that this whole thing is asynchronous, and depends on the return of `vboxmanage` _not_ the actual running state/runlevel of services within the guest. See <https://github.com/Node-Virtualization/node-virtualbox/issues/9>
