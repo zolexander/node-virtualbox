@@ -170,7 +170,7 @@ virtualbox.export("machine_name", "output").then ( () =>
 You can show snapshot list with `snapshotList` method:
 
 ```javascript
-virtualbox.snapshotList("machine_name").then ( (snapshotList,currentSnapshotUUID)) {
+virtualbox.snapshotList("machine_name").then ( (snapshotList,currentSnapshotUUID) => {
   if(snapshotList) {
     console.log(JSON.stringify(snapshotList), JSON.stringify(currentSnapshotUUID));
   }
