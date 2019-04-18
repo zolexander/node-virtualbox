@@ -62,6 +62,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.4",
+    "jasmine": "^3.4.0",
     "log4js": "^4.0.2"
   },
   "devDependencies": {
